@@ -14,3 +14,14 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::group([
+    'prefix' => 'api/{table}',
+    'namespace' => 'Api'
+], function() {
+    Route::get('/', 'Controller@index');
+    Route::post('/', 'Controller@store');
+    Route::get('/{id}', 'Controller@show');
+    Route::put('/{id}', 'Controller@update');
+    Route::delete('/{id}', 'Controller@destroy');
+});
