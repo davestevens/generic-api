@@ -17,32 +17,38 @@ class DynamicModel extends Model
 {
     static $_table;
     static $_encryptedAttributes = [];
-    static $_encryptedAttributeMutators = [];
 
     public static function fromTable($resourceName, $attributes = array()) {
         $instance = new static($attributes);
         $instance->setTable($resourceName);
 
-        // Define attributes which should be encrypted
         $resource = Resource::where('name', '=', $resourceName)->first();
         foreach ($resource->encryptedAttributes()->get() as $attribute) {
-            $instance->defineEncryptedAttributeMutators($attribute->name);
+            $instance->defineEncryptedAttributes($attribute->name);
         }
 
         return $instance;
     }
 
     public function __call($function, $parameters) {
-        if (array_key_exists($function, static::$_encryptedAttributeMutators)) {
-            return call_user_func_array(static::$_encryptedAttributeMutators[$function], $parameters);
+        if (strpos($function, 'Attribute') !== false
+            &&
+            preg_match('/^([g|s]et)(.+)Attribute$/', $function, $matches)
+        ) {
+            if (static::$snakeAttributes) {
+                $matches[2] = Str::snake($matches[2]);
+            }
+
+            if (array_key_exists($matches[2], static::$_encryptedAttributes)) {
+                return call_user_func_array(static::$_encryptedAttributes[$matches[2]][$matches[1]], $parameters);
+            }
         }
         return parent::__call($function, $parameters);
     }
 
     public static function cacheMutatedAttributes($class) {
         parent::cacheMutatedAttributes($class);
-        static::$mutatorCache[$class] = static::$mutatorCache[$class] + static::$_encryptedAttributes;
-        var_dump(static::$mutatorCache[$class]);
+        static::$mutatorCache[$class] = static::$mutatorCache[$class] + array_keys(static::$_encryptedAttributes);
     }
 
     public function hasGetMutator($key) {
@@ -65,19 +71,18 @@ class DynamicModel extends Model
         return static::$_table;
     }
 
-    private function defineEncryptedAttributeMutators($key) {
-        static::$_encryptedAttributes[] = $key;
-        // getter
-        static::$_encryptedAttributeMutators['get'.Str::studly($key).'Attribute'] = function($value) {
-            return $value ? Crypt::decrypt($value) : $value;
-        };
-        // setter
-        static::$_encryptedAttributeMutators['set'.Str::studly($key).'Attribute'] = function($value) {
-            $this->attributes[$key] = Crypt::encrypt($value);
-        };
+    private function defineEncryptedAttributes($key) {
+        static::$_encryptedAttributes[$key] = [
+            'get' => function($value) {
+                return $value ? Crypt::decrypt($value) : $value;
+            },
+            'set' => function($value) {
+                $this->attributes[$key] = Crypt::encrypt($value);
+            }
+        ];
     }
 
     public function isEncryptedAttribute($key) {
-        return in_array($key, static::$_encryptedAttributes);
+        return array_key_exists($key, static::$_encryptedAttributes);
     }
 }
