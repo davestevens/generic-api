@@ -34,7 +34,7 @@ Route::resource(
 Route::resource(
     'resources.attributes',
     'ResourceAttributesController',
-    ['only' => ['create', 'store']]
+    ['only' => ['index', 'create', 'store']]
 );
 Route::resource(
     'attributes',

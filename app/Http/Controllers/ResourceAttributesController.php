@@ -8,6 +8,12 @@ use Input;
 
 class ResourceAttributesController extends Controller
 {
+    public function index($resourceId) {
+        $resource = Resource::findOrFail($resourceId);
+
+        return view('resource-attributes.index', ['resource' => $resource]);
+    }
+
     public function create($resourceId) {
         $resource = Resource::findOrFail($resourceId);
         $attribute = new Attribute;
