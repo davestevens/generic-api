@@ -33,7 +33,8 @@ class Attribute extends Model
         Attribute::created(function($attribute) {
             $prefix = getenv('DB_PREFIX');
             Schema::table($prefix.$attribute->resource->name, function($table) use($attribute) {
-                call_user_func([$table, $attribute->type], $attribute->name);
+                $type = $attribute->isEncrypted() ? 'text' : $attribute->type;
+                call_user_func([$table, $type], $attribute->name);
             });
         });
 
@@ -47,5 +48,9 @@ class Attribute extends Model
 
     public function resource() {
         return $this->belongsTo('App\Models\Resource');
+    }
+
+    public function isEncrypted() {
+        return $this->encrypted == 1;
     }
 }
