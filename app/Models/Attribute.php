@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Schema;
 
 class Attribute extends Model
 {
@@ -21,6 +22,28 @@ class Attribute extends Model
         '0' => 'False',
         '1' => 'True'
     ];
+
+    public static function boot() {
+        parent::boot();
+
+        Attribute::creating(function($attribute) {
+            if (!($attribute->resource)) return false;
+        });
+
+        Attribute::created(function($attribute) {
+            $prefix = getenv('DB_PREFIX');
+            Schema::table($prefix.$attribute->resource->name, function($table) use($attribute) {
+                call_user_func([$table, $attribute->type], $attribute->name);
+            });
+        });
+
+        Attribute::deleted(function($attribute) {
+            $prefix = getenv('DB_PREFIX');
+            Schema::table($prefix.$attribute->resource->name, function($table) use($attribute) {
+                $table->dropColumn($attribute->name);
+            });
+        });
+    }
 
     public function resource() {
         return $this->belongsTo('App\Models\Resource');
