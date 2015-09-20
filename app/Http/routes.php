@@ -25,3 +25,5 @@ Route::group([
     Route::put('/{id}', 'Controller@update');
     Route::delete('/{id}', 'Controller@destroy');
 });
+
+Route::resource('resources', 'ResourcesController');
