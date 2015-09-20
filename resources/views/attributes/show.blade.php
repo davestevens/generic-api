@@ -6,7 +6,7 @@
     <dt>Type</dt>
     <dd>{{ $attribute->type }}</dd>
     <dt>Encrypted</dt>
-    <dd>{{ $attribute->encrypted }}</dd>
+    <dd>{{ $attribute->encrypted ? "True" : "False" }}</dd>
 </dl>
 
 {!! Former::open(route('attributes.destroy', $attribute))->method('DELETE') !!}

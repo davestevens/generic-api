@@ -12,7 +12,7 @@
             <tr>
                 <td>{{ $attribute->name }}</td>
                 <td>{{ $attribute->type }}</td>
-                <td>{{ $attribute->encrypted }}</td>
+                <td>{{ $attribute->encrypted ? "True" : "False" }}</td>
                 <td><a href="{{ route('attributes.show', $attribute) }}">Show</a></td>
             </tr>
         @endforeach

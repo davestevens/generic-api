@@ -14,6 +14,10 @@ class Attribute extends Model
         'resource_id'
     ];
 
+    protected $casts = [
+        'encrypted' => 'boolean'
+    ];
+
     public $type_options = [
         'string' => 'String'
     ];
@@ -33,7 +37,7 @@ class Attribute extends Model
         Attribute::created(function($attribute) {
             $prefix = getenv('DB_PREFIX');
             Schema::table($prefix.$attribute->resource->name, function($table) use($attribute) {
-                $type = $attribute->isEncrypted() ? 'text' : $attribute->type;
+                $type = $attribute->encrypted ? 'text' : $attribute->type;
                 call_user_func([$table, $type], $attribute->name);
             });
         });
@@ -48,9 +52,5 @@ class Attribute extends Model
 
     public function resource() {
         return $this->belongsTo('App\Models\Resource');
-    }
-
-    public function isEncrypted() {
-        return $this->encrypted == 1;
     }
 }
