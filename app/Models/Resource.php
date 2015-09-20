@@ -35,4 +35,8 @@ class Resource extends Model
     public function attributes() {
         return $this->hasMany('App\Models\Attribute');
     }
+
+    public function encryptedAttributes() {
+        return $this->hasMany('App\Models\Attribute')->where('encrypted', 1);
+    }
 }
