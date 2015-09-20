@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Schema;
 use App;
 use Crypt;
@@ -16,6 +17,7 @@ class DynamicModel extends Model
 {
     static $_table;
     static $_encryptedAttributes = [];
+    static $_encryptedAttributeMutators = [];
 
     public static function fromTable($resourceName, $attributes = array()) {
         $instance = new static($attributes);
@@ -24,38 +26,31 @@ class DynamicModel extends Model
         // Define attributes which should be encrypted
         $resource = Resource::where('name', '=', $resourceName)->first();
         foreach ($resource->encryptedAttributes()->get() as $attribute) {
-            $instance->setEncryptedAttribute($attribute->name);
+            $instance->defineEncryptedAttributeMutators($attribute->name);
         }
 
         return $instance;
     }
 
-    public function getAttribute($key) {
-        $value = parent::getAttribute($key);
-        if ($value && $this->isEncryptedAttribute($key)) {
-            $value = Crypt::decrypt($value);
+    public function __call($function, $parameters) {
+        if (array_key_exists($function, static::$_encryptedAttributeMutators)) {
+            return call_user_func_array(static::$_encryptedAttributeMutators[$function], $parameters);
         }
-        return $value;
+        return parent::__call($function, $parameters);
     }
 
-    public function setAttribute($key, $value) {
-        if ($this->isEncryptedAttribute($key)) {
-            $value = Crypt::encrypt($value);
-        }
-        parent::setAttribute($key, $value);
+    public static function cacheMutatedAttributes($class) {
+        parent::cacheMutatedAttributes($class);
+        static::$mutatorCache[$class] = static::$mutatorCache[$class] + static::$_encryptedAttributes;
+        var_dump(static::$mutatorCache[$class]);
     }
 
-    /**
-     * Used by toJson and toArray for retrieving attributes
-     */
-    public function attributesToArray() {
-        $attributes = parent::attributesToArray();
-        foreach ($attributes as $key => $value) {
-            if ($value && $this->isEncryptedAttribute($key)) {
-                $attributes[$key] = Crypt::decrypt($value);
-            }
-        }
-        return $attributes;
+    public function hasGetMutator($key) {
+        return $this->isEncryptedAttribute($key) || parent::hasGetMutator($key);
+    }
+
+    public function hasSetMutator($key) {
+        return $this->isEncryptedAttribute($key) || parent::hasGetMutator($key);
     }
 
     public function setTable($resourceName) {
@@ -70,8 +65,16 @@ class DynamicModel extends Model
         return static::$_table;
     }
 
-    public function setEncryptedAttribute($name) {
-        static::$_encryptedAttributes[] = $name;
+    private function defineEncryptedAttributeMutators($key) {
+        static::$_encryptedAttributes[] = $key;
+        // getter
+        static::$_encryptedAttributeMutators['get'.Str::studly($key).'Attribute'] = function($value) {
+            return $value ? Crypt::decrypt($value) : $value;
+        };
+        // setter
+        static::$_encryptedAttributeMutators['set'.Str::studly($key).'Attribute'] = function($value) {
+            $this->attributes[$key] = Crypt::encrypt($value);
+        };
     }
 
     public function isEncryptedAttribute($key) {
