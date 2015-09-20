@@ -76,8 +76,8 @@ class DynamicModel extends Model
             'get' => function($value) {
                 return $value ? Crypt::decrypt($value) : $value;
             },
-            'set' => function($value) {
-                $this->attributes[$key] = Crypt::encrypt($value);
+            'set' => function($value) use ($key) {
+                $this->attributes[$key] = $value? Crypt::encrypt($value) : $value;
             }
         ];
     }
