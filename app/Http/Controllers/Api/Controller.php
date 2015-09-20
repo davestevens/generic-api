@@ -5,16 +5,16 @@ use App\Models\DynamicModel;
 
 class Controller extends \App\Http\Controllers\Controller
 {
-    public function index($table) {
-        $this->ensureTableExists($table);
-        $instances = $this->buildModel($table)->all();
+    public function index($resource) {
+        $this->ensureTableExists($resource);
+        $instances = $this->buildModel($resource)->all();
 
         return $instances->toJSON();
     }
 
-    public function store($table) {
-        $this->ensureTableExists($table);
-        $model = $this-buildModel($table);
+    public function store($resource) {
+        $this->ensureTableExists($resource);
+        $model = $this-buildModel($resource);
 
         // TODO: get the attributes from the request body and set them
         $model->save();
@@ -22,16 +22,16 @@ class Controller extends \App\Http\Controllers\Controller
         return $model->toJSON();
     }
 
-    public function show($table, $id) {
-        $this->ensureTableExists($table);
-        $instance = $this->buildModel($table)->findOrFail($id);
+    public function show($resource, $id) {
+        $this->ensureTableExists($resource);
+        $instance = $this->buildModel($resource)->findOrFail($id);
 
         return $instance->toJSON();
     }
 
-    public function update($table, $id) {
-        $this->ensureTableExists($table);
-        $instance = $this->buildModel($table)->findOrFail($id);
+    public function update($resource, $id) {
+        $this->ensureTableExists($resource);
+        $instance = $this->buildModel($resource)->findOrFail($id);
 
         // TODO: get the attributes from the request body and set them
         $instance->save();
@@ -39,22 +39,28 @@ class Controller extends \App\Http\Controllers\Controller
         return $instance->toJSON();
     }
 
-    public function destroy($table, $id) {
-        $this->ensureTableExists($table);
-        $instance = $this->buildModel($table)->findOrFail($id);
+    public function destroy($resource, $id) {
+        $this->ensureTableExists($resource);
+        $instance = $this->buildModel($resource)->findOrFail($id);
 
         $instance->delete();
 
         return $instance->toJSON();
     }
 
-    private function buildModel($table) {
+    private function buildModel($resource) {
+        $table = $this->buildTableName($resource);
         return DynamicModel::fromTable($table);
     }
 
-    private function ensureTableExists($table) {
+    private function ensureTableExists($resource) {
+        $table = $this->buildTableName($resource);
         if (!\Schema::hasTable($table)) {
-            \App::abort(404, "'$table' does not exist.");
+            \App::abort(404, "'$resource' does not exist.");
         }
+    }
+
+    private function buildTableName($resource) {
+        return getenv('DB_PREFIX').$resource;
     }
 }

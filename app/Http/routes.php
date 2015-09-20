@@ -16,7 +16,7 @@ Route::get('/', function () {
 });
 
 Route::group([
-    'prefix' => 'api/{table}',
+    'prefix' => 'api/{resource}',
     'namespace' => 'Api'
 ], function() {
     Route::get('/', 'Controller@index');
@@ -26,4 +26,8 @@ Route::group([
     Route::delete('/{id}', 'Controller@destroy');
 });
 
-Route::resource('resources', 'ResourcesController');
+Route::resource(
+    'resources',
+    'ResourcesController',
+    ['except' => ['edit', 'update']]
+);

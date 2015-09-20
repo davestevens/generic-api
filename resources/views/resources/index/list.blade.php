@@ -2,7 +2,7 @@
     <thead>
         <tr>
             <th>Name</th>
-            <th colspan="2">Actions</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -10,7 +10,6 @@
             <tr>
                 <td>{{ $resource->name }}</td>
                 <td><a href="{!! route('resources.show', $resource) !!}">Show</a></td>
-                <td><a href="{!! route('resources.edit', $resource) !!}">Edit</a></td>
             </tr>
         @endforeach
     </tbody>
