@@ -32,7 +32,7 @@ class DynamicModel extends Model
 
     public function getAttribute($key) {
         $value = parent::getAttribute($key);
-        if ($this->isEncryptedAttribute($key)) {
+        if ($value && $this->isEncryptedAttribute($key)) {
             $value = Crypt::decrypt($value);
         }
         return $value;
@@ -51,7 +51,7 @@ class DynamicModel extends Model
     public function attributesToArray() {
         $attributes = parent::attributesToArray();
         foreach ($attributes as $key => $value) {
-            if ($this->isEncryptedAttribute($key)) {
+            if ($value && $this->isEncryptedAttribute($key)) {
                 $attributes[$key] = Crypt::decrypt($value);
             }
         }
