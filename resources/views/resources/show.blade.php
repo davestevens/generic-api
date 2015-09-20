@@ -5,6 +5,10 @@
 </p>
 
 <p>
+    <a href="{!! route('resources.data.index', $resource) !!}">Data</a>
+</p>
+
+<p>
     <a href="{!! route('resources.attributes.create', $resource) !!}">Create Attribute</a>
 </p>
 

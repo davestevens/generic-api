@@ -41,3 +41,8 @@ Route::resource(
     'AttributesController',
     ['only' => ['show', 'destroy']]
 );
+Route::resource(
+    'resources.data',
+    'ResourceDataController',
+    ['only' => ['index']]
+);
