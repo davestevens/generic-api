@@ -31,4 +31,8 @@ class Resource extends Model
             Schema::drop($prefix.$resource->name);
         });
     }
+
+    public function attributes() {
+        return $this->hasMany('App\Models\Attribute');
+    }
 }

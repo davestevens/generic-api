@@ -31,3 +31,13 @@ Route::resource(
     'ResourcesController',
     ['except' => ['edit', 'update']]
 );
+Route::resource(
+    'resources.attributes',
+    'ResourceAttributesController',
+    ['only' => ['create', 'store']]
+);
+Route::resource(
+    'attributes',
+    'AttributesController',
+    ['only' => ['show', 'destroy']]
+);
