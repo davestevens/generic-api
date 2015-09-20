@@ -1,9 +1,9 @@
-<h2>Attributes for {{ $resource->name }}</h2>
+<h2>Attributes for <a href="{{ route('resources.show', $resource) }}">{{ $resource->name }}</a></h2>
 
 @if (count($resource->attributes) === 0)
-    @include('resource-attributes.show.empty')
+    @include('resource-attributes.index.empty')
 @else
-    @include('resource-attributes.show.list', ['attributes' => $resource->attributes])
+    @include('resource-attributes.index.list', ['attributes' => $resource->attributes])
 @endif
 
 <p>
