@@ -10,7 +10,7 @@ class Controller extends \App\Http\Controllers\Controller
     public function index($resource) {
         $instances = $this->buildModel($resource)->all();
 
-        return $instances->toJSON();
+        return response($instances->toJSON())->header('Content-Type', 'application/json');
     }
 
     public function store($resource) {
@@ -22,13 +22,13 @@ class Controller extends \App\Http\Controllers\Controller
         }
         $instance->save();
 
-        return $instance->toJSON();
+        return response($instance->toJSON())->header('Content-Type', 'application/json');
     }
 
     public function show($resource, $id) {
         $instance = $this->buildModel($resource)->findOrFail($id);
 
-        return $instance->toJSON();
+        return response($instance->toJSON())->header('Content-Type', 'application/json');
     }
 
     public function update($resource, $id) {
@@ -40,7 +40,7 @@ class Controller extends \App\Http\Controllers\Controller
         }
         $instance->save();
 
-        return $instance->toJSON();
+        return response($instance->toJSON())->header('Content-Type', 'application/json');
     }
 
     public function destroy($resource, $id) {
@@ -48,7 +48,7 @@ class Controller extends \App\Http\Controllers\Controller
 
         $instance->delete();
 
-        return $instance->toJSON();
+        return response($instance->toJSON())->header('Content-Type', 'application/json');
     }
 
     private function buildModel($resource) {

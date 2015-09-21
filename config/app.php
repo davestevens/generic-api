@@ -145,7 +145,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        Former\FormerServiceProvider::class
+        Former\FormerServiceProvider::class,
+        Barryvdh\Cors\ServiceProvider::class
 
     ],
 

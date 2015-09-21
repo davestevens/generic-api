@@ -17,7 +17,8 @@ Route::get('/', function () {
 
 Route::group([
     'prefix' => 'api/{resource}',
-    'namespace' => 'Api'
+    'namespace' => 'Api',
+    'middleware' => 'cors'
 ], function() {
     Route::get('/', 'Controller@index');
     Route::post('/', 'Controller@store');
