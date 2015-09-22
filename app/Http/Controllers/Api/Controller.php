@@ -52,6 +52,6 @@ class Controller extends \App\Http\Controllers\Controller
     }
 
     private function buildModel($resource) {
-        return DynamicModel::fromTable($resource);
+        return DynamicModel::forResource($resource);
     }
 }

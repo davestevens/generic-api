@@ -8,17 +8,18 @@ use Schema;
 use App;
 use Crypt;
 
-/**
- * Model which enables dynamically setting which database table to use
- * http://stackoverflow.com/questions/18044577/laravel-4-dynamic-table-names-using-settable
- */
-
 class DynamicModel extends Model
 {
     static $_table;
     static $_encryptedAttributes = [];
 
-    public static function fromTable($resourceName, $attributes = array()) {
+    /**
+     * Build a DynamicModel
+     *
+     * Sets static::$_table with the table name based on the passed resource name
+     * Builds a list of encrypted attributes for defining mutators and casters
+     */
+    public static function forResource($resourceName, $attributes = array()) {
         $instance = new static($attributes);
         $instance->setTable($resourceName);
 
@@ -30,47 +31,52 @@ class DynamicModel extends Model
         return $instance;
     }
 
+    /**
+     * Overrides function from Illuminate\Database\Eloquent\Model
+     * Calls a mutator function in static::$_encryptedAttributes if required
+     */
     public function __call($function, $parameters) {
-        if (strpos($function, 'Attribute') !== false
-            &&
-            preg_match('/^([g|s]et)(.+)Attribute$/', $function, $matches)
-        ) {
-            if (static::$snakeAttributes) {
-                $matches[2] = Str::snake($matches[2]);
-            }
+        if (preg_match('/^([g|s]et)(.+)Attribute$/', $function, $matches)) {
+            $mutator = $matches[1];
+            $attribute = static::$snakeAttributes ? Str::snake($matches[2]) : $matches[2];
 
-            if (array_key_exists($matches[2], static::$_encryptedAttributes)) {
-                return call_user_func_array(static::$_encryptedAttributes[$matches[2]][$matches[1]], $parameters);
+            if ($this->isEncryptedAttribute($attribute)) {
+                $function = static::$_encryptedAttributes[$attribute][$mutator];
+                return call_user_func_array($function, $parameters);
             }
         }
         return parent::__call($function, $parameters);
     }
 
+    /**
+     * Overrides function from Illuminate\Database\Eloquent\Model
+     * Includes our mutated attribute keys (used for JSON output)
+     */
     public static function cacheMutatedAttributes($class) {
         parent::cacheMutatedAttributes($class);
         static::$mutatorCache[$class] = static::$mutatorCache[$class] + array_keys(static::$_encryptedAttributes);
     }
 
+    /**
+     * Overrides function from Illuminate\Database\Eloquent\Model
+     * Checks if the attribute has a mutator define by us
+     */
     public function hasGetMutator($key) {
         return $this->isEncryptedAttribute($key) || parent::hasGetMutator($key);
     }
 
+    /**
+     * Overrides function from Illuminate\Database\Eloquent\Model
+     * Checks if the attribute has a mutator define by us
+     */
     public function hasSetMutator($key) {
         return $this->isEncryptedAttribute($key) || parent::hasGetMutator($key);
     }
 
-    public function setTable($resourceName) {
-        $table = getenv('DB_PREFIX').$resourceName;
-        if (!Schema::hasTable($table)) {
-            App::abort(404, "'$resourceName' does not exist.");
-        }
-        static::$_table = $table;
-    }
-
-    public function getTable() {
-        return static::$_table;
-    }
-
+    /**
+     * Overrides function from Illuminate\Database\Eloquent\Model
+     * Returns our defined cast type for encrypted attributes
+     */
     protected function getCastType($key) {
         if ($this->isEncryptedAttribute($key)) {
             return static::$_encryptedAttributes[$key]['type'];
@@ -80,6 +86,30 @@ class DynamicModel extends Model
         }
     }
 
+    /**
+     * Overrides function from Illuminate\Database\Eloquent\Model
+     * Builds a table name based on our resource, stores it on the Class
+     */
+    public function setTable($resourceName) {
+        $table = getenv('DB_PREFIX').$resourceName;
+        if (!Schema::hasTable($table)) {
+            App::abort(404, "'$resourceName' does not exist.");
+        }
+        static::$_table = $table;
+    }
+
+    /**
+     * Overrides function from Illuminate\Database\Eloquent\Model
+     * Retrieves our built table name from the Class
+     */
+    public function getTable() {
+        return static::$_table;
+    }
+
+    /**
+     * Builds an array of mutators and the type for casting
+     * Mutators decrypt/encrypt the value using Crypt
+     */
     private function defineEncryptedAttribute($attribute) {
         $key = $attribute->name;
         static::$_encryptedAttributes[$key] = [
@@ -94,7 +124,10 @@ class DynamicModel extends Model
         ];
     }
 
-    public function isEncryptedAttribute($key) {
+    /**
+     * Checks if the attribute is one of our encrypted attributes
+     */
+    private function isEncryptedAttribute($key) {
         return array_key_exists($key, static::$_encryptedAttributes);
     }
 }

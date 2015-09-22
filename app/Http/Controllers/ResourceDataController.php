@@ -8,7 +8,7 @@ class ResourceDataController extends Controller
 {
     public function index($resourceId) {
         $resource = Resource::findOrFail($resourceId);
-        $data = DynamicModel::fromTable($resource->name)->all();
+        $data = DynamicModel::forResource($resource->name)->all();
 
         return view('resource-data.index', [
             'resource' => $resource,
