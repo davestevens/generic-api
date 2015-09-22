@@ -24,7 +24,7 @@ class DynamicModel extends Model
 
         $resource = Resource::where('name', '=', $resourceName)->first();
         foreach ($resource->encryptedAttributes()->get() as $attribute) {
-            $instance->defineEncryptedAttributes($attribute->name);
+            $instance->defineEncryptedAttribute($attribute);
         }
 
         return $instance;
@@ -71,14 +71,26 @@ class DynamicModel extends Model
         return static::$_table;
     }
 
-    private function defineEncryptedAttributes($key) {
+    protected function getCastType($key) {
+        if ($this->isEncryptedAttribute($key)) {
+            return static::$_encryptedAttributes[$key]['type'];
+        }
+        else {
+            return parent::getCastType($key);
+        }
+    }
+
+    private function defineEncryptedAttribute($attribute) {
+        $key = $attribute->name;
         static::$_encryptedAttributes[$key] = [
-            'get' => function($value) {
-                return $value ? Crypt::decrypt($value) : $value;
+            'get' => function($value) use ($key) {
+                $value = $value ? Crypt::decrypt($value) : $value;
+                return $this->castAttribute($key, $value);
             },
             'set' => function($value) use ($key) {
                 $this->attributes[$key] = $value? Crypt::encrypt($value) : $value;
-            }
+            },
+            'type' => $attribute->type
         ];
     }
 

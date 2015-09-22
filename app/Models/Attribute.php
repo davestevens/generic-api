@@ -19,7 +19,8 @@ class Attribute extends Model
     ];
 
     public $type_options = [
-        'string' => 'String'
+        'string' => 'String',
+        'float' => 'Float'
     ];
 
     public $encrypted_options = [
